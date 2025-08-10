@@ -96,17 +96,6 @@ export default function ReportClient() {
         )}
       </div>
 
-      <div className="absolute bottom-20">
-        <Button
-            size="lg"
-            className="h-24 w-24 rounded-full"
-            onClick={handleReport}
-            disabled={isRecording || isLoading}
-            aria-label="Report Emergency"
-          >
-            <Mic className="h-12 w-12" />
-        </Button>
-      </div>
     </div>
   );
 }
