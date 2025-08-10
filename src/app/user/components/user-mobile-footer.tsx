@@ -5,7 +5,7 @@ const navItems = [
   { href: '/user', icon: Home, label: 'Home' },
   { href: '#', icon: History, label: 'History' },
   { href: '#', icon: MessageSquare, label: 'Message' },
-  { href: '#', icon: User, label: 'Profile' },
+  { href: '/profile', icon: User, label: 'Profile' },
 ];
 
 export default function UserMobileFooter() {

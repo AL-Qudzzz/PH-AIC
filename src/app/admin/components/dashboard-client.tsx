@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
 import type { Incident, Cluster } from "@/lib/definitions";
 import { mockIncidents } from "@/lib/mock-data";
 import { detectIncidentCluster } from "@/ai/flows/incident-cluster-detection";
@@ -8,14 +9,30 @@ import IncidentList from "./incident-list";
 import IncidentDetails from "./incident-details";
 import ClusterAlert from "./cluster-alert";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardClient() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [clusters, setClusters] = useState<Cluster[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
+    // Basic check for authentication
+    const adminStatus = localStorage.getItem("isAdmin");
+    if (adminStatus !== "true") {
+      router.replace('/profile');
+    } else {
+      setIsAuthenticated(true);
+    }
+  }, [router]);
+  
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
     // Initial load of mock data
     const sortedIncidents = [...mockIncidents].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     setIncidents(sortedIncidents);
@@ -56,7 +73,7 @@ export default function DashboardClient() {
     }, 15000);
 
     return () => clearInterval(intervalId);
-  }, [toast]);
+  }, [toast, isAuthenticated]);
 
   const handleClusterDetection = async (currentIncidents: Incident[]) => {
     try {
@@ -93,10 +110,31 @@ export default function DashboardClient() {
         });
     }
   };
+  
+  const handleLogout = () => {
+    localStorage.removeItem("isAdmin");
+    router.push('/profile');
+  };
+
+  if (!isAuthenticated) {
+    return (
+        <div className="h-full w-full flex flex-col items-center justify-center gap-4 p-4">
+            <Skeleton className="h-8 w-1/2" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-grow w-full">
+                <Skeleton className="lg:col-span-1 h-full rounded-lg" />
+                <Skeleton className="lg:col-span-2 h-full rounded-lg" />
+            </div>
+        </div>
+    );
+  }
+
 
   return (
     <div className="h-full w-full flex flex-col gap-4">
-      {clusters.length > 0 && <ClusterAlert clusters={clusters} />}
+      <div className="flex justify-between items-center">
+        {clusters.length > 0 && <ClusterAlert clusters={clusters} />}
+        <Button onClick={handleLogout} variant="outline" className="ml-auto">Logout</Button>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-grow">
         <div className="lg:col-span-1 h-full">
           <IncidentList
