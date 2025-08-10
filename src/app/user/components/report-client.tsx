@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Mic, Square, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { callTriage, CallTriageOutput } from "@/ai/flows/call-triage";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,63 +41,72 @@ export default function ReportClient() {
     }, 5000);
   };
 
+  if (result) {
+    return (
+        <div className="w-full h-full flex flex-col justify-center items-center text-center p-4">
+            <div className="w-full space-y-4 text-left p-4 rounded-lg bg-white shadow-md">
+                <h3 className="text-lg font-semibold text-center text-foreground">Hasil Triase AI:</h3>
+                <div>
+                    <p className="font-bold text-foreground">Transkrip:</p>
+                    <p className="text-muted-foreground">{result.transcript || "Tidak dapat mentranskripsi audio."}</p>
+                </div>
+                <div>
+                    <p className="font-bold text-foreground">Jenis Darurat:</p>
+                    <p className="text-muted-foreground">{result.emergencyType || "Tidak teridentifikasi."}</p>
+                </div>
+                <div>
+                    <p className="font-bold text-foreground">Detail Penting:</p>
+                    <p className="text-muted-foreground">{result.keyDetails || "Tidak ada detail penting yang diekstrak."}</p>
+                </div>
+                 <Button onClick={() => setResult(null)} className="w-full mt-4">Laporkan Lagi</Button>
+            </div>
+        </div>
+    );
+  }
+
   return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle className="text-2xl text-center">Lapor Darurat</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center space-y-6 min-h-[200px]">
-        {!isLoading && !result && !isRecording && (
-          <Button
-            size="lg"
-            className="h-24 w-24 rounded-full"
-            onClick={handleReport}
-          >
-            <Mic className="h-12 w-12" />
-          </Button>
+    <div className="relative w-full h-full flex flex-col justify-center items-center text-center">
+      <div className="absolute top-0 w-full h-2/3 bg-white rounded-b-[4rem] flex flex-col justify-center items-center p-4">
+        {isLoading ? (
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        ) : isRecording ? (
+           <div className="flex flex-col items-center space-y-4">
+             <p className="text-lg font-medium text-foreground">Merekam...</p>
+             <div className="relative flex items-center justify-center">
+               <div className="absolute h-20 w-20 bg-destructive/50 rounded-full animate-ping"></div>
+               <Button size="lg" className="h-16 w-16 rounded-full bg-destructive hover:bg-destructive/90" disabled>
+                 <Square className="h-8 w-8" />
+               </Button>
+             </div>
+             <p className="text-sm text-muted-foreground">Jelaskan situasi darurat Anda.</p>
+           </div>
+        ) : (
+          <>
+            <h1 className="text-4xl font-bold text-foreground">Hey! User</h1>
+            <p className="text-muted-foreground mt-2 max-w-xs">
+              Press the Microphone button below to speak
+            </p>
+          </>
         )}
-        {isRecording && (
-          <div className="flex flex-col items-center space-y-4">
-            <p className="text-lg font-medium">Merekam...</p>
-            <div className="relative flex items-center justify-center">
-              <div className="absolute h-20 w-20 bg-destructive/50 rounded-full animate-ping"></div>
-              <Button size="lg" className="h-16 w-16 rounded-full bg-destructive hover:bg-destructive/90" disabled>
-                <Square className="h-8 w-8" />
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">Jelaskan situasi darurat Anda.</p>
-          </div>
-        )}
-        {isLoading && <Loader2 className="h-12 w-12 animate-spin" />}
-        {result && (
-          <div className="w-full space-y-4 text-left p-4 rounded-lg bg-background">
-            <h3 className="text-lg font-semibold">Hasil Triase AI:</h3>
-            <div>
-              <p className="font-bold">Transkrip:</p>
-              <p className="text-muted-foreground">{result.transcript || "Tidak dapat mentranskripsi audio."}</p>
-            </div>
-            <div>
-              <p className="font-bold">Jenis Darurat:</p>
-              <p className="text-muted-foreground">{result.emergencyType || "Tidak teridentifikasi."}</p>
-            </div>
-            <div>
-              <p className="font-bold">Detail Penting:</p>
-              <p className="text-muted-foreground">{result.keyDetails || "Tidak ada detail penting yang diekstrak."}</p>
-            </div>
-          </div>
-        )}
-        {error && (
-            <div className="text-destructive flex items-center gap-2">
+         {error && (
+            <div className="text-destructive flex items-center gap-2 mt-4">
                 <AlertTriangle />
                 <p>Error: {error}</p>
             </div>
         )}
-      </CardContent>
-      <CardFooter className="flex justify-center">
-        {result && (
-            <Button onClick={() => setResult(null)}>Laporkan Lagi</Button>
-        )}
-      </CardFooter>
-    </Card>
+      </div>
+
+      <div className="absolute bottom-20">
+        <Button
+            size="lg"
+            className="h-24 w-24 rounded-full"
+            onClick={handleReport}
+            disabled={isRecording || isLoading}
+            aria-label="Report Emergency"
+          >
+            <Mic className="h-12 w-12" />
+        </Button>
+      </div>
+    </div>
   );
 }

@@ -1,9 +1,15 @@
 import ReportClient from "./components/report-client";
+import UserMobileHeader from "./components/user-mobile-header";
+import UserMobileFooter from "./components/user-mobile-footer";
 
 export default function UserPage() {
   return (
-    <div className="flex justify-center items-start pt-10">
-      <ReportClient />
+    <div className="flex flex-col h-screen w-full max-w-md mx-auto bg-background">
+        <UserMobileHeader />
+        <main className="flex-grow">
+            <ReportClient />
+        </main>
+        <UserMobileFooter />
     </div>
   );
 }
