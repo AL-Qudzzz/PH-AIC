@@ -1,30 +1,17 @@
+
 import { Incident } from './definitions';
 
 export const mockIncidents: Incident[] = [
   {
-    id: '1',
-    type: 'Medical',
-    location: 'Jl. Sudirman, Jakarta',
-    timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-    transcript: 'Operator: 112, ada yang bisa dibantu? Pelapor: Tolong, ada kecelakaan di depan Plaza Indonesia, sepertinya ada yang pingsan.',
-    summary: {
-      whatHappened: 'Kecelakaan di depan Plaza Indonesia, ada korban pingsan.',
-      whereItHappened: 'Depan Plaza Indonesia, Jl. Sudirman, Jakarta',
-    },
-    classification: {
-      emergencyType: 'Medical',
-      confidenceScore: 0.95,
-    },
-  },
-  {
-    id: '2',
+    id: '12345',
     type: 'Fire',
-    location: 'Jl. Gatot Subroto, Jakarta',
-    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    transcript: 'Operator: Layanan darurat. Pelapor: Kebakaran! Ada api di gedung apartemen saya di Kuningan!',
+    location: 'Jalan Sudirman & Thamrin',
+    timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+    transcript: 'Operator: 112, ada yang bisa dibantu? Pelapor: Tolong, ada kebakaran di gedung tinggi dekat Bundaran HI.',
+    speech: "There's a fire at the i...",
     summary: {
-      whatHappened: 'Kebakaran di gedung apartemen.',
-      whereItHappened: 'Kuningan, Jl. Gatot Subroto, Jakarta',
+      whatHappened: 'Kebakaran di gedung tinggi dekat Bundaran HI.',
+      whereItHappened: 'Jalan Sudirman & Thamrin',
     },
     classification: {
       emergencyType: 'Fire',
@@ -32,48 +19,51 @@ export const mockIncidents: Incident[] = [
     },
   },
   {
-    id: '3',
-    type: 'Police',
-    location: 'Jl. Hayam Wuruk, Jakarta',
-    timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-    transcript: 'Operator: 112. Pelapor: Ada perampokan di toko emas dekat halte busway Mangga Besar.',
+    id: '12346',
+    type: 'Accident',
+    location: 'Jalan Gatot Subroto',
+    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    transcript: 'Operator: Layanan darurat. Pelapor: Saya butuh ambulans, ada kecelakaan motor di depan SCBD.',
+    speech: "I need an ambulance...",
     summary: {
-      whatHappened: 'Perampokan di toko emas.',
-      whereItHappened: 'Dekat halte busway Mangga Besar, Jl. Hayam Wuruk, Jakarta',
+      whatHappened: 'Kecelakaan motor di depan SCBD.',
+      whereItHappened: 'Jalan Gatot Subroto',
+    },
+    classification: {
+      emergencyType: 'Medical',
+      confidenceScore: 0.95,
+    },
+  },
+  {
+    id: '12347',
+    type: 'Robbery',
+    location: 'Jalan Kuningan',
+    timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+    transcript: 'Operator: 112. Pelapor: Tolong! Ada perampokan di minimarket di Setiabudi.',
+    speech: "Help! There's a robbe...",
+    summary: {
+      whatHappened: 'Perampokan di minimarket.',
+      whereItHappened: 'Setiabudi, Jalan Kuningan',
     },
     classification: {
       emergencyType: 'Police',
       confidenceScore: 0.92,
     },
   },
-    {
-    id: '4',
-    type: 'Medical',
-    location: 'Jl. Sudirman, Jakarta',
-    timestamp: new Date(Date.now() - 1 * 60 * 1000).toISOString(),
-    transcript: 'Pelapor: Halo, teman saya jatuh dari motor di dekat Bundaran HI. Kakinya berdarah banyak.',
-    summary: {
-      whatHappened: 'Kecelakaan motor, korban pendarahan di kaki.',
-      whereItHappened: 'Dekat Bundaran HI, Jl. Sudirman, Jakarta',
-    },
-    classification: {
-      emergencyType: 'Medical',
-      confidenceScore: 0.96,
-    },
-  },
   {
-    id: '5',
-    type: 'Traffic',
-    location: 'Tol Cikampek KM 50',
+    id: '12348',
+    type: 'Gas Leak',
+    location: 'Jalan Rasuna Said',
     timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    transcript: 'Pelapor: Pak, ini di tol Cikampek arah Jakarta macet total ada truk terguling.',
+    transcript: 'Pelapor: Halo, saya pikir ada kebocoran gas di apartemen saya, baunya sangat menyengat.',
+    speech: "I think there's a gas l...",
     summary: {
-      whatHappened: 'Truk terguling menyebabkan kemacetan total.',
-      whereItHappened: 'Tol Cikampek KM 50 arah Jakarta',
+      whatHappened: 'Dugaan kebocoran gas di apartemen.',
+      whereItHappened: 'Jalan Rasuna Said',
     },
     classification: {
-      emergencyType: 'Traffic',
-      confidenceScore: 0.99,
+      emergencyType: 'Fire',
+      confidenceScore: 0.88,
     },
   },
 ];

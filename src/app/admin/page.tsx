@@ -1,8 +1,9 @@
+
 import DashboardClient from "./components/dashboard-client";
 
 export default function AdminPage() {
     return (
-        <div className="bg-background min-h-screen">
+        <div className="bg-gray-50/50 min-h-screen">
              <DashboardClient />
         </div>
     );

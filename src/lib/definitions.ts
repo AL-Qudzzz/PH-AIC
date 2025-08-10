@@ -1,4 +1,5 @@
-export type EmergencyType = 'Medical' | 'Fire' | 'Police' | 'Traffic' | 'Unknown';
+
+export type EmergencyType = 'Medical' | 'Fire' | 'Police' | 'Traffic' | 'Unknown' | 'Accident' | 'Robbery' | 'Gas Leak';
 
 export type Incident = {
   id: string;
@@ -6,6 +7,7 @@ export type Incident = {
   location: string;
   timestamp: string;
   transcript: string;
+  speech?: string; // Add this to match the mock data
   summary: {
     whatHappened: string;
     whereItHappened: string;
