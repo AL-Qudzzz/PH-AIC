@@ -6,6 +6,23 @@ import { Mic, Square, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { callTriage, CallTriageOutput } from "@/ai/flows/call-triage";
 import { useToast } from "@/hooks/use-toast";
+import type { Incident, EmergencyType } from "@/lib/definitions";
+import { mockIncidents } from "@/lib/mock-data";
+
+const INCIDENTS_STORAGE_KEY = 'siaga-incidents';
+
+// Helper function to get a random item from an array
+const getRandomItem = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+// Helper function to map string to EmergencyType
+const toEmergencyType = (type: string): EmergencyType => {
+  const lowerType = type.toLowerCase();
+  if (lowerType.includes('medical') || lowerType.includes('medis')) return 'Medical';
+  if (lowerType.includes('fire') || lowerType.includes('kebakaran')) return 'Fire';
+  if (lowerType.includes('police') || lowerType.includes('polisi')) return 'Police';
+  if (lowerType.includes('traffic') || lowerType.includes('lalu lintas')) return 'Traffic';
+  return 'Unknown';
+};
 
 export default function ReportClient() {
   const [isRecording, setIsRecording] = useState(false);
@@ -48,7 +65,7 @@ export default function ReportClient() {
         });
         return;
     }
-
+    
     setError(null);
     setResult(null);
 
@@ -67,14 +84,48 @@ export default function ReportClient() {
             setIsLoading(true);
             const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
             
-            // Convert Blob to Base64 Data URI
+            if (audioBlob.size === 0) {
+                setError("Tidak ada suara yang terdeteksi. Silakan coba lagi.");
+                setIsLoading(false);
+                setResult(null);
+                return;
+            }
+
             const reader = new FileReader();
             reader.readAsDataURL(audioBlob);
             reader.onloadend = async () => {
                 const base64data = reader.result as string;
                 try {
                     const response = await callTriage({ audioDataUri: base64data });
-                    setResult(response);
+
+                    if (!response.transcript || response.transcript.trim().length < 5) {
+                        setError("Tidak dapat mendeteksi suara yang jelas. Mohon bicara lebih keras dan jelas.");
+                        setResult(null);
+                    } else {
+                        setResult(response);
+                        // Save to localStorage for admin dashboard
+                        const newIncident: Incident = {
+                          id: `inc-${Date.now()}`,
+                          timestamp: new Date().toISOString(),
+                          transcript: response.transcript,
+                          type: toEmergencyType(response.emergencyType),
+                          location: response.keyDetails.split(',').pop()?.trim() || 'Unknown Location',
+                          summary: {
+                            whatHappened: response.keyDetails,
+                            whereItHappened: response.keyDetails.split(',').pop()?.trim() || 'Unknown Location',
+                          },
+                          classification: {
+                            emergencyType: response.emergencyType,
+                            confidenceScore: Math.random() * (0.99 - 0.85) + 0.85, // Simulate confidence
+                          },
+                        };
+
+                        const storedIncidents = localStorage.getItem(INCIDENTS_STORAGE_KEY);
+                        const incidents = storedIncidents ? JSON.parse(storedIncidents) as Incident[] : mockIncidents;
+                        incidents.push(newIncident);
+                        localStorage.setItem(INCIDENTS_STORAGE_KEY, JSON.stringify(incidents));
+                    }
+
                 } catch (e) {
                      const errorMessage = e instanceof Error ? e.message : "Terjadi kesalahan yang tidak diketahui.";
                     setError(errorMessage);
@@ -88,7 +139,6 @@ export default function ReportClient() {
                 }
             };
             
-            // Stop media tracks
             stream.getTracks().forEach(track => track.stop());
         };
 
@@ -114,6 +164,11 @@ export default function ReportClient() {
       startRecording();
     }
   };
+  
+  const handleReset = () => {
+    setResult(null);
+    setError(null);
+  };
 
   if (result) {
     return (
@@ -132,7 +187,7 @@ export default function ReportClient() {
                     <p className="font-bold text-foreground">Detail Penting:</p>
                     <p className="text-muted-foreground">{result.keyDetails || "Tidak ada detail penting yang diekstrak."}</p>
                 </div>
-                 <Button onClick={() => setResult(null)} className="w-full mt-4">Laporkan Lagi</Button>
+                 <Button onClick={handleReset} className="w-full mt-4">Laporkan Lagi</Button>
             </div>
         </div>
     );
@@ -151,7 +206,6 @@ export default function ReportClient() {
              <p className="text-lg font-medium text-foreground">Merekam...</p>
              <div className="relative flex items-center justify-center">
                <div className="absolute h-20 w-20 bg-destructive/50 rounded-full animate-ping"></div>
-               {/* This button is now handled by the footer's central button */}
              </div>
              <p className="text-sm text-muted-foreground">Jelaskan situasi darurat Anda. Tekan lagi untuk berhenti.</p>
            </div>
@@ -170,7 +224,6 @@ export default function ReportClient() {
             </div>
         )}
       </div>
-      {/* Hidden button to be triggered by the footer */}
       <button id="report-button" onClick={handleMicClick} className="hidden">Report</button>
     </div>
   );

@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from 'next/navigation';
-import type { Incident, Cluster } from "@/lib/definitions";
+import type { Incident, Cluster, EmergencyType } from "@/lib/definitions";
 import { mockIncidents } from "@/lib/mock-data";
 import { detectIncidentCluster } from "@/ai/flows/incident-cluster-detection";
 import IncidentList from "./incident-list";
@@ -12,6 +12,8 @@ import ClusterAlert from "./cluster-alert";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+
+const INCIDENTS_STORAGE_KEY = 'siaga-incidents';
 
 export default function DashboardClient() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -26,57 +28,16 @@ export default function DashboardClient() {
     const adminStatus = localStorage.getItem("isAdmin");
     if (adminStatus !== "true") {
       router.replace('/profile');
-      // No need to set isAuthenticated to false here, as we are redirecting
     } else {
       setIsAuthenticated(true);
     }
   }, [router]);
-
-  // Effect for data loading and intervals, depends on authentication
-  useEffect(() => {
-    if (isAuthenticated) {
-      const sortedIncidents = [...mockIncidents].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      setIncidents(sortedIncidents);
-      setSelectedIncident(sortedIncidents[0] || null);
-      
-      handleClusterDetection(sortedIncidents);
-
-      const intervalId = setInterval(() => {
-          const newIncident: Incident = {
-              id: `inc-${Date.now()}`,
-              type: 'Medical',
-              location: 'Jl. Sudirman, Jakarta',
-              timestamp: new Date().toISOString(),
-              transcript: 'Pelapor: Tolong, ada orang pingsan di lobi gedung BEJ.',
-              summary: {
-                  whatHappened: 'Orang pingsan.',
-                  whereItHappened: 'Lobi gedung BEJ, Jl. Sudirman, Jakarta',
-              },
-              classification: {
-                  emergencyType: 'Medical',
-                  confidenceScore: 0.88,
-              },
-          };
-        
-        setIncidents(prev => {
-          const updatedIncidents = [newIncident, ...prev];
-          handleClusterDetection(updatedIncidents);
-          return updatedIncidents;
-        });
-        
-        toast({
-          title: "New Incident Received",
-          description: `Medical emergency reported at ${newIncident.location}`,
-        });
-
-      }, 15000);
-
-      return () => clearInterval(intervalId);
+  
+  const handleClusterDetection = useCallback(async (currentIncidents: Incident[]) => {
+    if (currentIncidents.length < 2) {
+        setClusters([]);
+        return;
     }
-  }, [isAuthenticated, toast]);
-
-
-  const handleClusterDetection = async (currentIncidents: Incident[]) => {
     try {
       const reports = currentIncidents.map(inc => ({
         location: inc.location,
@@ -93,8 +54,9 @@ export default function DashboardClient() {
       if (result.clusters && result.clusters.length > 0) {
         const mappedClusters: Cluster[] = result.clusters.map(c => ({
             ...c,
+            // @ts-ignore
             reports: c.reports.map(r => 
-                currentIncidents.find(i => i.timestamp === r.timestamp && i.location === r.location) || mockIncidents[0] 
+                currentIncidents.find(i => i.timestamp === r.timestamp && i.location.toLowerCase() === r.location.toLowerCase()) || mockIncidents[0] 
             )
         }));
         setClusters(mappedClusters);
@@ -109,7 +71,43 @@ export default function DashboardClient() {
           description: "Could not process incident cluster detection.",
         });
     }
-  };
+  }, [toast]);
+
+
+  // Effect for data loading and intervals, depends on authentication
+  useEffect(() => {
+    if (isAuthenticated) {
+        const loadIncidents = () => {
+            const storedIncidents = localStorage.getItem(INCIDENTS_STORAGE_KEY);
+            const allIncidents = storedIncidents ? JSON.parse(storedIncidents) as Incident[] : mockIncidents;
+            const sortedIncidents = [...allIncidents].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            
+            setIncidents(sortedIncidents);
+            if (!selectedIncident && sortedIncidents.length > 0) {
+              setSelectedIncident(sortedIncidents[0]);
+            }
+            handleClusterDetection(sortedIncidents);
+        };
+        
+        loadIncidents();
+
+        const handleStorageChange = (event: StorageEvent) => {
+            if (event.key === INCIDENTS_STORAGE_KEY) {
+                loadIncidents();
+                toast({
+                    title: "New Incident Received",
+                    description: `Dashboard has been updated.`,
+                });
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }
+  }, [isAuthenticated, toast, handleClusterDetection, selectedIncident]);
   
   const handleLogout = () => {
     localStorage.removeItem("isAdmin");
@@ -130,7 +128,7 @@ export default function DashboardClient() {
 
 
   return (
-    <div className="h-full w-full flex flex-col gap-4">
+    <div className="h-full w-full flex flex-col gap-4 p-4">
       <div className="flex justify-between items-center">
         {clusters.length > 0 && <ClusterAlert clusters={clusters} />}
         <Button onClick={handleLogout} variant="outline" className="ml-auto">Logout</Button>
@@ -148,7 +146,7 @@ export default function DashboardClient() {
             <IncidentDetails incident={selectedIncident} />
           ) : (
             <div className="flex items-center justify-center h-full bg-card rounded-lg">
-                <p className="text-muted-foreground">Select an incident to view details</p>
+                <p className="text-muted-foreground">No incidents reported yet. Reports from users will appear here.</p>
             </div>
           )}
         </div>
