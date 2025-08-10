@@ -85,6 +85,10 @@ export default function DashboardClient() {
             setIncidents(sortedIncidents);
             if (!selectedIncident && sortedIncidents.length > 0) {
               setSelectedIncident(sortedIncidents[0]);
+            } else if (selectedIncident) {
+              // refresh selected incident data
+              const newSelected = sortedIncidents.find(i => i.id === selectedIncident.id);
+              setSelectedIncident(newSelected || sortedIncidents[0] || null);
             }
             handleClusterDetection(sortedIncidents);
         };
@@ -116,7 +120,7 @@ export default function DashboardClient() {
 
   if (isAuthenticated === null) {
     return (
-        <div className="h-full w-full flex flex-col items-center justify-center gap-4 p-4">
+        <div className="h-screen w-full flex flex-col items-center justify-center gap-4 p-4">
             <Skeleton className="h-8 w-1/2" />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-grow w-full">
                 <Skeleton className="lg:col-span-1 h-full rounded-lg" />
@@ -128,25 +132,30 @@ export default function DashboardClient() {
 
 
   return (
-    <div className="h-full w-full flex flex-col gap-4 p-4">
-      <div className="flex justify-between items-center">
-        {clusters.length > 0 && <ClusterAlert clusters={clusters} />}
-        <Button onClick={handleLogout} variant="outline" className="ml-auto">Logout</Button>
+    <div className="h-screen w-full flex flex-col gap-4 p-4 bg-gray-50">
+      <div className="flex justify-between items-center flex-wrap gap-2">
+        <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+        <div className="flex items-center gap-4">
+          <Button onClick={handleLogout} variant="outline">Logout</Button>
+        </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-grow">
-        <div className="lg:col-span-1 h-full">
+       <div className="w-full">
+         <ClusterAlert clusters={clusters} />
+       </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow min-h-0">
+        <div className="lg:col-span-1 h-full min-h-0">
           <IncidentList
             incidents={incidents}
             selectedIncident={selectedIncident}
             onSelectIncident={setSelectedIncident}
           />
         </div>
-        <div className="lg:col-span-2 h-full">
+        <div className="lg:col-span-2 h-full min-h-0">
           {selectedIncident ? (
             <IncidentDetails incident={selectedIncident} />
           ) : (
-            <div className="flex items-center justify-center h-full bg-card rounded-lg">
-                <p className="text-muted-foreground">No incidents reported yet. Reports from users will appear here.</p>
+            <div className="flex items-center justify-center h-full bg-white rounded-lg shadow">
+                <p className="text-gray-500">No incidents reported yet. Reports from users will appear here.</p>
             </div>
           )}
         </div>

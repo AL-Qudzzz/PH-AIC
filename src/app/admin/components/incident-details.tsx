@@ -12,48 +12,48 @@ type IncidentDetailsProps = {
 
 export default function IncidentDetails({ incident }: IncidentDetailsProps) {
   return (
-    <Card className="h-full flex flex-col">
-       <CardHeader>
-        <CardTitle>Incident Details</CardTitle>
-        <CardDescription>{incident.location}</CardDescription>
+    <Card className="h-full flex flex-col shadow-lg rounded-xl">
+       <CardHeader className="bg-gray-50 rounded-t-xl border-b">
+        <CardTitle className="text-xl font-bold text-gray-900">Incident Details</CardTitle>
+        <CardDescription className="text-gray-600">{incident.location}</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-4">
-            <Card>
+      <CardContent className="flex-grow p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white rounded-b-xl">
+        <div className="space-y-6">
+            <Card className="shadow-md rounded-lg">
                 <CardHeader>
-                    <CardTitle className="text-lg">AI Analysis</CardTitle>
+                    <CardTitle className="text-lg font-semibold text-gray-800">AI Analysis</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-4">
                     <div>
-                        <h4 className="font-semibold">Classification</h4>
-                        <div className="flex items-center gap-2">Type: <Badge>{incident.classification.emergencyType}</Badge></div>
-                        <div className="flex items-center gap-2">Confidence: <Badge variant="outline">{(incident.classification.confidenceScore * 100).toFixed(0)}%</Badge></div>
+                        <h4 className="font-semibold text-gray-700">Classification</h4>
+                        <div className="flex items-center gap-2 mt-1">Type: <Badge className="capitalize text-sm">{incident.classification.emergencyType}</Badge></div>
+                        <div className="flex items-center gap-2 mt-1">Confidence: <Badge variant="outline" className="text-sm">{(incident.classification.confidenceScore * 100).toFixed(0)}%</Badge></div>
                     </div>
                     <div>
-                        <h4 className="font-semibold">Key Information</h4>
-                        <p><span className="font-bold">What:</span> {incident.summary.whatHappened}</p>
-                        <p><span className="font-bold">Where:</span> {incident.summary.whereItHappened}</p>
+                        <h4 className="font-semibold text-gray-700">Key Information</h4>
+                        <p className="mt-1"><span className="font-bold text-gray-600">What:</span> {incident.summary.whatHappened}</p>
+                        <p className="mt-1"><span className="font-bold text-gray-600">Where:</span> {incident.summary.whereItHappened}</p>
                     </div>
                 </CardContent>
             </Card>
-            <Card className="flex-grow flex flex-col">
+            <Card className="flex-grow flex flex-col shadow-md rounded-lg">
                 <CardHeader>
-                    <CardTitle className="text-lg">Call Transcript</CardTitle>
+                    <CardTitle className="text-lg font-semibold text-gray-800">Call Transcript</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow">
-                    <ScrollArea className="h-48 p-4 border rounded-md">
-                        <p className="text-sm text-muted-foreground">{incident.transcript}</p>
+                    <ScrollArea className="h-48 p-4 border rounded-md bg-gray-50">
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{incident.transcript}</p>
                     </ScrollArea>
                 </CardContent>
             </Card>
         </div>
-        <div>
-            <Card className="h-full">
+        <div className="h-full">
+            <Card className="h-full shadow-md rounded-lg">
                 <CardHeader>
-                    <CardTitle className="text-lg">Incident Location</CardTitle>
+                    <CardTitle className="text-lg font-semibold text-gray-800">Incident Location</CardTitle>
                 </CardHeader>
                 <CardContent>
-                     <div className="aspect-video w-full bg-muted rounded-lg overflow-hidden">
+                     <div className="aspect-video w-full bg-muted rounded-lg overflow-hidden border">
                         <Image
                             src={`https://placehold.co/600x400.png`}
                             alt="Map placeholder"
