@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,32 +17,26 @@ export default function DashboardClient() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [clusters, setClusters] = useState<Cluster[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
-    // Basic check for authentication
     const adminStatus = localStorage.getItem("isAdmin");
     if (adminStatus !== "true") {
       router.replace('/profile');
-    } else {
-      setIsAuthenticated(true);
+      setIsAuthenticated(false);
+      return;
     }
-  }, [router]);
-  
-  useEffect(() => {
-    if (!isAuthenticated) return;
+    
+    setIsAuthenticated(true);
 
-    // Initial load of mock data
     const sortedIncidents = [...mockIncidents].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     setIncidents(sortedIncidents);
     setSelectedIncident(sortedIncidents[0] || null);
     
-    // Initial cluster detection
     handleClusterDetection(sortedIncidents);
 
-    // Simulate new incidents arriving every 15 seconds
     const intervalId = setInterval(() => {
         const newIncident: Incident = {
             id: `inc-${Date.now()}`,
@@ -73,7 +68,7 @@ export default function DashboardClient() {
     }, 15000);
 
     return () => clearInterval(intervalId);
-  }, [toast, isAuthenticated]);
+  }, [router, toast]);
 
   const handleClusterDetection = async (currentIncidents: Incident[]) => {
     try {
@@ -93,7 +88,6 @@ export default function DashboardClient() {
         const mappedClusters: Cluster[] = result.clusters.map(c => ({
             ...c,
             reports: c.reports.map(r => 
-                // find the original incident, very inefficient but ok for mock
                 currentIncidents.find(i => i.timestamp === r.timestamp && i.location === r.location) || mockIncidents[0] 
             )
         }));
@@ -116,7 +110,7 @@ export default function DashboardClient() {
     router.push('/profile');
   };
 
-  if (!isAuthenticated) {
+  if (isAuthenticated === null || !isAuthenticated) {
     return (
         <div className="h-full w-full flex flex-col items-center justify-center gap-4 p-4">
             <Skeleton className="h-8 w-1/2" />
