@@ -33,7 +33,7 @@ export default function UserMobileFooter() {
     <footer className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto bg-transparent" style={{ height: '100px' }}>
       <div className="relative w-full h-full">
         {/* The microphone button positioned in the middle, slightly overlapping */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-5 z-10">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-8 z-10">
            {/* This is a simplified, non-functional visual placeholder to avoid duplicating state logic. The real button is in ReportClient */}
            <Button
               size="lg"
