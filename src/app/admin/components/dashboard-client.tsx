@@ -111,7 +111,7 @@ export default function DashboardClient() {
             window.removeEventListener('storage', handleStorageChange);
         };
     }
-  }, [isAuthenticated, toast, handleClusterDetection, selectedIncident]);
+  }, [isAuthenticated, toast, handleClusterDetection]);
   
   const handleLogout = () => {
     localStorage.removeItem("isAdmin");
