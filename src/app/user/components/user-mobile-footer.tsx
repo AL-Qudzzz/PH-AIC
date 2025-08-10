@@ -1,11 +1,12 @@
+
 "use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, History, MessageSquare, User, Mic } from 'lucide-react';
+import { Home, History, MessageSquare, User, Mic, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 
 const navItems = [
@@ -18,50 +19,71 @@ const navItems = [
 
 export default function UserMobileFooter() {
   const pathname = usePathname();
+  // We need a way to know if recording is active to change the icon
+  const [isRecording, setIsRecording] = useState(false);
 
-  // The actual report button is in ReportClient, this is a placeholder for layout
-  const handleReportClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleReportClick = () => {
     // Logic is handled in ReportClient, find the button and click it
     const reportButton = document.getElementById('report-button');
     if (reportButton) {
       reportButton.click();
+      // This is a bit of a hack to sync state. A better way would be using a global state manager (like Zustand or Context).
+      // For this prototype, we'll toggle it based on the click.
+      setIsRecording(prev => !prev);
     }
   };
+  
+  // A more robust way to sync state would be to use a MutationObserver or a shared state.
+  // This effect will reset the button if the user navigates away or if results are shown.
+  useEffect(() => {
+    const reportClientNode = document.querySelector('.relative.w-full.h-full');
+    if (!reportClientNode) return;
+
+    const observer = new MutationObserver((mutationsList) => {
+        for(const mutation of mutationsList) {
+            if (mutation.type === 'childList') {
+                const isRecordingDiv = document.querySelector('.relative.flex.items-center.justify-center');
+                const isResultDiv = document.querySelector('.w-full.space-y-4.text-left');
+                if (!isRecordingDiv || isResultDiv) {
+                    setIsRecording(false);
+                }
+            }
+        }
+    });
+
+    observer.observe(reportClientNode, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
+
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto bg-transparent" style={{ height: '100px' }}>
       <div className="relative w-full h-full">
-        {/* The microphone button positioned in the middle, slightly overlapping */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-8 z-10">
-           {/* This is a simplified, non-functional visual placeholder to avoid duplicating state logic. The real button is in ReportClient */}
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-5 z-10">
            <Button
               size="lg"
-              className="h-24 w-24 rounded-full"
-              onClick={(e) => {
-                 const realButton = document.querySelector<HTMLButtonElement>('[aria-label="Report Emergency"]');
-                 realButton?.click();
-              }}
-              aria-label="Report Emergency"
+              className={cn(
+                "h-24 w-24 rounded-full transition-colors duration-300",
+                isRecording ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
+              )}
+              onClick={handleReportClick}
+              aria-label={isRecording ? "Stop Recording" : "Report Emergency"}
             >
-              <Mic className="h-12 w-12" />
+              {isRecording ? <Square className="h-10 w-10" /> : <Mic className="h-12 w-12" />}
           </Button>
         </div>
         
-        {/* The navigation bar background */}
         <div className="absolute bottom-0 w-full h-20 bg-white rounded-t-3xl shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)]">
            <nav className="flex justify-around items-center h-full">
                 <div className="flex justify-between items-center w-full px-4">
-                    {/* Left side icons */}
                     <div className="flex justify-around w-2/5">
                         <NavItem item={navItems[0]} pathname={pathname} />
                         <NavItem item={navItems[1]} pathname={pathname} />
                     </div>
 
-                    {/* Spacer for the central button */}
                     <div className="w-1/5"></div>
 
-                    {/* Right side icons */}
                     <div className="flex justify-around w-2/5">
                         <NavItem item={navItems[3]} pathname={pathname} />
                         <NavItem item={navItems[4]} pathname={pathname} />
