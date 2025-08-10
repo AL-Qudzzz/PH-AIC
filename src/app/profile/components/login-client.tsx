@@ -43,7 +43,7 @@ export default function LoginClient() {
     <div className="w-full h-full flex flex-col justify-center items-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Admin Login</CardTitle>
+          <CardTitle>Login</CardTitle>
           <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
         </CardHeader>
         <CardContent>
