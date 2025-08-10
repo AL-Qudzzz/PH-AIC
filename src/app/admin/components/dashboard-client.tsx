@@ -21,54 +21,60 @@ export default function DashboardClient() {
   const { toast } = useToast();
   const router = useRouter();
 
+  // Effect for authentication check and redirection
   useEffect(() => {
     const adminStatus = localStorage.getItem("isAdmin");
     if (adminStatus !== "true") {
       router.replace('/profile');
-      setIsAuthenticated(false);
-      return;
+      // No need to set isAuthenticated to false here, as we are redirecting
+    } else {
+      setIsAuthenticated(true);
     }
-    
-    setIsAuthenticated(true);
+  }, [router]);
 
-    const sortedIncidents = [...mockIncidents].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    setIncidents(sortedIncidents);
-    setSelectedIncident(sortedIncidents[0] || null);
-    
-    handleClusterDetection(sortedIncidents);
-
-    const intervalId = setInterval(() => {
-        const newIncident: Incident = {
-            id: `inc-${Date.now()}`,
-            type: 'Medical',
-            location: 'Jl. Sudirman, Jakarta',
-            timestamp: new Date().toISOString(),
-            transcript: 'Pelapor: Tolong, ada orang pingsan di lobi gedung BEJ.',
-            summary: {
-                whatHappened: 'Orang pingsan.',
-                whereItHappened: 'Lobi gedung BEJ, Jl. Sudirman, Jakarta',
-            },
-            classification: {
-                emergencyType: 'Medical',
-                confidenceScore: 0.88,
-            },
-        };
+  // Effect for data loading and intervals, depends on authentication
+  useEffect(() => {
+    if (isAuthenticated) {
+      const sortedIncidents = [...mockIncidents].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setIncidents(sortedIncidents);
+      setSelectedIncident(sortedIncidents[0] || null);
       
-      setIncidents(prev => {
-        const updatedIncidents = [newIncident, ...prev];
-        handleClusterDetection(updatedIncidents);
-        return updatedIncidents;
-      });
-      
-      toast({
-        title: "New Incident Received",
-        description: `Medical emergency reported at ${newIncident.location}`,
-      });
+      handleClusterDetection(sortedIncidents);
 
-    }, 15000);
+      const intervalId = setInterval(() => {
+          const newIncident: Incident = {
+              id: `inc-${Date.now()}`,
+              type: 'Medical',
+              location: 'Jl. Sudirman, Jakarta',
+              timestamp: new Date().toISOString(),
+              transcript: 'Pelapor: Tolong, ada orang pingsan di lobi gedung BEJ.',
+              summary: {
+                  whatHappened: 'Orang pingsan.',
+                  whereItHappened: 'Lobi gedung BEJ, Jl. Sudirman, Jakarta',
+              },
+              classification: {
+                  emergencyType: 'Medical',
+                  confidenceScore: 0.88,
+              },
+          };
+        
+        setIncidents(prev => {
+          const updatedIncidents = [newIncident, ...prev];
+          handleClusterDetection(updatedIncidents);
+          return updatedIncidents;
+        });
+        
+        toast({
+          title: "New Incident Received",
+          description: `Medical emergency reported at ${newIncident.location}`,
+        });
 
-    return () => clearInterval(intervalId);
-  }, [router, toast]);
+      }, 15000);
+
+      return () => clearInterval(intervalId);
+    }
+  }, [isAuthenticated, toast]);
+
 
   const handleClusterDetection = async (currentIncidents: Incident[]) => {
     try {
@@ -110,7 +116,7 @@ export default function DashboardClient() {
     router.push('/profile');
   };
 
-  if (isAuthenticated === null || !isAuthenticated) {
+  if (isAuthenticated === null) {
     return (
         <div className="h-full w-full flex flex-col items-center justify-center gap-4 p-4">
             <Skeleton className="h-8 w-1/2" />
