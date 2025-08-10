@@ -159,7 +159,7 @@ export default function ReportClient() {
           <>
             <h1 className="text-4xl font-bold text-foreground">Hai People</h1>
             <p className="text-muted-foreground mt-2 max-w-xs">
-              Tekan tombol Mikrofon di bawah untuk berbicara
+              Tekan tombol mikrofon dibawah untuk melaporkan kejadian darurat
             </p>
           </>
         )}
