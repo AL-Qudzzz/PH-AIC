@@ -26,8 +26,8 @@ export default function IncidentDetails({ incident }: IncidentDetailsProps) {
                 <CardContent className="space-y-2">
                     <div>
                         <h4 className="font-semibold">Classification</h4>
-                        <p>Type: <Badge>{incident.classification.emergencyType}</Badge></p>
-                        <p>Confidence: <Badge variant="outline">{(incident.classification.confidenceScore * 100).toFixed(0)}%</Badge></p>
+                        <div className="flex items-center gap-2">Type: <Badge>{incident.classification.emergencyType}</Badge></div>
+                        <div className="flex items-center gap-2">Confidence: <Badge variant="outline">{(incident.classification.confidenceScore * 100).toFixed(0)}%</Badge></div>
                     </div>
                     <div>
                         <h4 className="font-semibold">Key Information</h4>
