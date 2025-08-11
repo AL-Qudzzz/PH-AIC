@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -8,34 +9,57 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from "lucide-react";
+import { auth } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
 export default function LoginClient() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
-    // Hardcoded credentials for admin
-    if (username === "admin" && password === "password") {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       toast({
         title: "Login Successful",
         description: "Redirecting to admin dashboard...",
       });
-      // In a real app, you'd set a session/token here
-      localStorage.setItem("isAdmin", "true");
       router.push("/admin");
-    } else {
-      setError("Invalid username or password.");
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: "Please check your credentials and try again.",
-      });
+    } catch (err: any) {
+        if (err.code === 'auth/user-not-found') {
+            // If user does not exist, try to create a new one (for demo purposes)
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                toast({
+                    title: "Signup Successful",
+                    description: "New account created. Redirecting to admin dashboard...",
+                });
+                router.push("/admin");
+            } catch (signupError: any) {
+                setError(signupError.message);
+                toast({
+                    variant: "destructive",
+                    title: "Signup Failed",
+                    description: "Could not create a new account.",
+                });
+            }
+        } else {
+             setError("Invalid email or password.");
+             toast({
+                variant: "destructive",
+                title: "Login Failed",
+                description: "Please check your credentials and try again.",
+             });
+        }
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -43,19 +67,19 @@ export default function LoginClient() {
     <div className="w-full h-full flex flex-col justify-center items-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
+          <CardTitle>Admin Login</CardTitle>
+          <CardDescription>Enter credentials to access the dashboard. <br/> Use <b>admin@example.com</b> / <b>password123</b></CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="admin@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -64,7 +88,7 @@ export default function LoginClient() {
               <Input
                 id="password"
                 type="password"
-                placeholder="password"
+                placeholder="password123"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -76,8 +100,8 @@ export default function LoginClient() {
                 <p>{error}</p>
               </div>
             )}
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Logging in...' : 'Login or Sign Up'}
             </Button>
           </form>
         </CardContent>

@@ -3,36 +3,38 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from 'next/navigation';
-import type { Incident, Cluster, EmergencyType } from "@/lib/definitions";
-import { mockIncidents } from "@/lib/mock-data";
+import type { Incident, Cluster } from "@/lib/definitions";
 import { detectIncidentCluster } from "@/ai/flows/incident-cluster-detection";
 import IncidentList from "./incident-list";
 import IncidentDetails from "./incident-details";
-import ClusterAlert from "./cluster-alert";
 import AdminHeader from "./admin-header";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const INCIDENTS_STORAGE_KEY = 'siaga-incidents';
+import { auth, db } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 
 export default function DashboardClient() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
 
   // Effect for authentication check and redirection
   useEffect(() => {
-    const adminStatus = localStorage.getItem("isAdmin");
-    if (adminStatus !== "true") {
-      router.replace('/profile');
-    } else {
-      setIsAuthenticated(true);
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.replace('/profile');
+      } else {
+        setIsAuthenticated(true);
+      }
+    });
+    return () => unsubscribe();
   }, [router]);
-  
+
   const handleClusterDetection = useCallback(async (currentIncidents: Incident[]) => {
     if (currentIncidents.length < 2) {
         setClusters([]);
@@ -54,10 +56,9 @@ export default function DashboardClient() {
       if (result.clusters && result.clusters.length > 0) {
         const mappedClusters: Cluster[] = result.clusters.map(c => ({
             ...c,
-            // @ts-ignore
             reports: c.reports.map(r => 
-                currentIncidents.find(i => i.timestamp === r.timestamp && i.location.toLowerCase() === r.location.toLowerCase()) || mockIncidents[0] 
-            )
+                currentIncidents.find(i => i.timestamp === r.timestamp && i.location.toLowerCase() === r.location.toLowerCase())! 
+            ).filter(Boolean) as Incident[]
         }));
         setClusters(mappedClusters);
       } else {
@@ -73,71 +74,61 @@ export default function DashboardClient() {
     }
   }, [toast]);
 
-
-  // Effect for data loading and intervals, depends on authentication
+  // Effect for data loading from Firestore, depends on authentication
   useEffect(() => {
     if (isAuthenticated) {
-        const loadIncidents = () => {
-            const storedIncidents = localStorage.getItem(INCIDENTS_STORAGE_KEY);
-            let allIncidents = storedIncidents ? JSON.parse(storedIncidents) as Incident[] : [];
-            
-             // If local storage is empty, populate with mock data
-            if (allIncidents.length === 0) {
-                allIncidents = mockIncidents;
-                localStorage.setItem(INCIDENTS_STORAGE_KEY, JSON.stringify(allIncidents));
-            }
-            
-            // Ensure all incidents have a speech property
-            allIncidents = allIncidents.map(inc => ({
-                ...inc,
-                speech: inc.speech || inc.summary.whatHappened,
-            }));
+      const q = query(collection(db, "incidents"), orderBy("timestamp", "desc"));
+      
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const fetchedIncidents: Incident[] = [];
+        querySnapshot.forEach((doc) => {
+          fetchedIncidents.push({ id: doc.id, ...doc.data() } as Incident);
+        });
 
-            const sortedIncidents = [...allIncidents].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-            
-            setIncidents(sortedIncidents);
-            if (!selectedIncident && sortedIncidents.length > 0) {
-              setSelectedIncident(sortedIncidents[0]);
-            } else if (selectedIncident) {
-              // refresh selected incident data
-              const newSelected = sortedIncidents.find(i => i.id === selectedIncident.id);
-              setSelectedIncident(newSelected || sortedIncidents[0] || null);
-            }
-            handleClusterDetection(sortedIncidents);
-        };
-        
-        loadIncidents();
+        setIncidents(fetchedIncidents);
+        setIsLoading(false);
 
-        const handleStorageChange = (event: StorageEvent) => {
-            if (event.key === INCIDENTS_STORAGE_KEY) {
-                loadIncidents();
-                toast({
-                    title: "New Incident Received",
-                    description: `Dashboard has been updated.`,
-                });
-            }
-        };
+        if (fetchedIncidents.length > 0) {
+           if (!selectedIncident || !fetchedIncidents.some(inc => inc.id === selectedIncident.id)) {
+            setSelectedIncident(fetchedIncidents[0]);
+           } else {
+             const refreshedSelected = fetchedIncidents.find(inc => inc.id === selectedIncident.id);
+             setSelectedIncident(refreshedSelected || fetchedIncidents[0]);
+           }
+           handleClusterDetection(fetchedIncidents);
+        } else {
+            setSelectedIncident(null);
+        }
+      }, (error) => {
+        console.error("Error fetching incidents: ", error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load incidents",
+          description: "Could not retrieve data from the database.",
+        });
+        setIsLoading(false);
+      });
 
-        window.addEventListener('storage', handleStorageChange);
-
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        };
+      return () => unsubscribe();
     }
-  }, [isAuthenticated, toast, handleClusterDetection]);
+  }, [isAuthenticated, toast, handleClusterDetection]); // Removed selectedIncident
   
-  if (isAuthenticated === null) {
+  if (!isAuthenticated || isLoading) {
     return (
-        <div className="h-screen w-full flex flex-col items-center justify-center gap-4 p-4 md:p-8">
-            <Skeleton className="h-16 w-full" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 flex-grow w-full">
-                <Skeleton className="md:col-span-1 h-full rounded-lg" />
-                <Skeleton className="md:col-span-2 h-full rounded-lg" />
-            </div>
+        <div className="h-screen w-full flex flex-col items-center justify-center gap-4 p-4 md:p-8 bg-gray-50/50">
+            <AdminHeader />
+            <main className="flex-1 grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6 p-4 md:p-6 min-h-0 w-full">
+               <div className="md:col-span-1 xl:col-span-1 h-full min-h-0">
+                 <Skeleton className="h-full w-full rounded-xl" />
+               </div>
+               <div className="md:col-span-2 xl:col-span-3 h-full min-h-0 flex flex-col gap-6">
+                 <Skeleton className="h-1/3 w-full rounded-xl" />
+                 <Skeleton className="h-2/3 w-full rounded-xl" />
+               </div>
+            </main>
         </div>
     );
   }
-
 
   return (
     <div className="h-screen w-full flex flex-col bg-gray-50/50">

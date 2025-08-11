@@ -35,7 +35,7 @@ export default function IncidentList({ incidents, selectedIncident, onSelectInci
                       )}
                     >
                       <div className="flex justify-between items-baseline mb-1">
-                        <p className="font-semibold text-sm text-gray-900">Incident #{incident.id}</p>
+                        <p className="font-semibold text-sm text-gray-900">Incident #{incident.id.substring(0, 6)}...</p>
                          <p className="text-xs text-gray-500">
                            {formatDistanceToNow(new Date(incident.timestamp), { addSuffix: true })}
                          </p>

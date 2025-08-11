@@ -15,8 +15,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from 'date-fns';
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Flame, Siren, Ambulance, CarCrash } from "lucide-react";
-
-const INCIDENTS_STORAGE_KEY = 'siaga-incidents';
+import { auth, db } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 
 const ICONS: Record<EmergencyType, React.ElementType> = {
     Medical: Ambulance,
@@ -37,38 +38,48 @@ const getEmergencyTypeIcon = (type: EmergencyType) => {
 export default function IncidentsClient() {
   const [groupedIncidents, setGroupedIncidents] = useState<Record<string, Incident[]>>({});
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const adminStatus = localStorage.getItem("isAdmin");
-    if (adminStatus !== "true") {
-      router.replace('/profile');
-    } else {
-      setIsAuthenticated(true);
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.replace('/profile');
+      } else {
+        setIsAuthenticated(true);
+      }
+    });
+    return () => unsubscribe();
   }, [router]);
   
   useEffect(() => {
     if (isAuthenticated) {
-        const storedIncidents = localStorage.getItem(INCIDENTS_STORAGE_KEY);
-        const allIncidents = storedIncidents ? JSON.parse(storedIncidents) as Incident[] : [];
-        
-        const grouped = allIncidents.reduce((acc, incident) => {
-            const type = incident.type || 'Unknown';
-            if (!acc[type]) {
-                acc[type] = [];
-            }
-            acc[type].push(incident);
-            // Sort incidents within each group by timestamp descending
-            acc[type].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-            return acc;
-        }, {} as Record<string, Incident[]>);
-        
-        setGroupedIncidents(grouped);
+        const q = query(collection(db, "incidents"), orderBy("timestamp", "desc"));
+
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const allIncidents: Incident[] = [];
+            querySnapshot.forEach((doc) => {
+                allIncidents.push({ id: doc.id, ...doc.data() } as Incident);
+            });
+
+            const grouped = allIncidents.reduce((acc, incident) => {
+                const type = incident.type || 'Unknown';
+                if (!acc[type]) {
+                    acc[type] = [];
+                }
+                acc[type].push(incident);
+                return acc;
+            }, {} as Record<string, Incident[]>);
+            
+            setGroupedIncidents(grouped);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
     }
   }, [isAuthenticated]);
 
-  if (isAuthenticated === null) {
+  if (!isAuthenticated || isLoading) {
     return (
         <div className="space-y-4">
             <Skeleton className="h-10 w-1/4" />
@@ -105,7 +116,7 @@ export default function IncidentsClient() {
                                 <AccordionItem value={incident.id} key={incident.id}>
                                     <AccordionTrigger>
                                         <div className="flex flex-col items-start text-left">
-                                            <span className="font-semibold">ID: {incident.id}</span>
+                                            <span className="font-semibold">ID: {incident.id.substring(0,6)}...</span>
                                             <span className="text-xs text-muted-foreground">{incident.location}</span>
                                         </div>
                                     </AccordionTrigger>

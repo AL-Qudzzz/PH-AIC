@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
+import { useToast } from "@/hooks/use-toast";
+
 
 const Logo = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -20,10 +24,23 @@ const Logo = () => (
 export default function AdminHeader() {
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
-  const handleLogout = () => {
-    localStorage.removeItem("isAdmin");
-    router.push('/profile');
+  const handleLogout = async () => {
+    try {
+        await signOut(auth);
+        toast({
+            title: "Logout Successful",
+            description: "You have been logged out.",
+        });
+        router.push('/profile');
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Logout Failed",
+            description: "An error occurred during logout. Please try again.",
+        });
+    }
   };
 
   const navItems = [

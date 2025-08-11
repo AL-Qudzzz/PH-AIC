@@ -7,12 +7,8 @@ import { Button } from "@/components/ui/button";
 import { callTriage, CallTriageOutput } from "@/ai/flows/call-triage";
 import { useToast } from "@/hooks/use-toast";
 import type { Incident, EmergencyType } from "@/lib/definitions";
-import { mockIncidents } from "@/lib/mock-data";
-
-const INCIDENTS_STORAGE_KEY = 'siaga-incidents';
-
-// Helper function to get a random item from an array
-const getRandomItem = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 // Helper function to map string to EmergencyType
 const toEmergencyType = (type: string): EmergencyType => {
@@ -103,15 +99,16 @@ export default function ReportClient() {
                         setResult(null);
                     } else {
                         setResult(response);
-                        // Save to localStorage for admin dashboard
-                        const newIncident: Incident = {
-                          id: `inc-${Date.now()}`,
+                        
+                        // Omit 'id' because Firestore generates it
+                        const newIncidentPayload: Omit<Incident, 'id'> = {
                           timestamp: new Date().toISOString(),
                           transcript: response.transcript,
                           type: toEmergencyType(response.emergencyType),
                           location: response.keyDetails.split(',').pop()?.trim() || 'Unknown Location',
                           latitude: response.latitude,
                           longitude: response.longitude,
+                          speech: response.transcript.substring(0, 20) + '...',
                           summary: {
                             whatHappened: response.keyDetails,
                             whereItHappened: response.keyDetails.split(',').pop()?.trim() || 'Unknown Location',
@@ -122,10 +119,11 @@ export default function ReportClient() {
                           },
                         };
 
-                        const storedIncidents = localStorage.getItem(INCIDENTS_STORAGE_KEY);
-                        const incidents = storedIncidents ? JSON.parse(storedIncidents) as Incident[] : [];
-                        incidents.push(newIncident);
-                        localStorage.setItem(INCIDENTS_STORAGE_KEY, JSON.stringify(incidents));
+                        await addDoc(collection(db, "incidents"), newIncidentPayload);
+                         toast({
+                            title: "Laporan Terkirim",
+                            description: "Laporan darurat Anda telah berhasil dikirim ke pusat kendali.",
+                        });
                     }
 
                 } catch (e) {
