@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const Logo = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -18,11 +19,19 @@ const Logo = () => (
 
 export default function AdminHeader() {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     localStorage.removeItem("isAdmin");
     router.push('/profile');
   };
+
+  const navItems = [
+    { href: "/admin", label: "Dashboard" },
+    { href: "/admin/incidents", label: "Incidents" },
+    { href: "#", label: "Resources" },
+    { href: "#", label: "Settings" },
+  ]
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-white px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -31,10 +40,17 @@ export default function AdminHeader() {
         <span className="text-lg font-bold">SIAGA 112</span>
       </div>
       <nav className="hidden md:flex items-center gap-4 text-sm font-medium ml-10">
-          <Link href="#" className="text-gray-600 hover:text-gray-900">Dashboard</Link>
-          <Link href="#" className="text-gray-600 hover:text-gray-900">Incidents</Link>
-          <Link href="#" className="text-gray-600 hover:text-gray-900">Resources</Link>
-          <Link href="#" className="text-gray-600 hover:text-gray-900">Settings</Link>
+          {navItems.map((item) => (
+             <Link 
+                href={item.href} 
+                key={item.href}
+                className={cn(
+                    "text-gray-600 hover:text-gray-900", 
+                    pathname === item.href && "text-primary font-semibold"
+                )}>
+                {item.label}
+              </Link>
+          ))}
       </nav>
       <div className="ml-auto flex items-center gap-4">
         <Button variant="ghost" size="icon" className="text-gray-600 hover:text-gray-900">
