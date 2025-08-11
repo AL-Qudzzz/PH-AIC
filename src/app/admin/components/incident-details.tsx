@@ -79,9 +79,10 @@ export default function IncidentDetails({ incident }: IncidentDetailsProps) {
                                 <SelectValue placeholder="Select a team..." />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="medic-1">Medic Team 1</SelectItem>
-                                <SelectItem value="fire-unit-a">Fire Unit A</SelectItem>
-                                <SelectItem value="police-car-3">Police Car 3</SelectItem>
+                                <SelectItem value="ambulan">Ambulan</SelectItem>
+                                <SelectItem value="polisi">Polisi</SelectItem>
+                                <SelectItem value="pemadam-kebakaran">Pemadam Kebakaran</SelectItem>
+                                <SelectItem value="bpbd">BPBD</SelectItem>
                             </SelectContent>
                         </Select>
                      </div>
