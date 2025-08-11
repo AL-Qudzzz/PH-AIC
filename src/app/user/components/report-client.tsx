@@ -110,6 +110,8 @@ export default function ReportClient() {
                           transcript: response.transcript,
                           type: toEmergencyType(response.emergencyType),
                           location: response.keyDetails.split(',').pop()?.trim() || 'Unknown Location',
+                          latitude: response.latitude,
+                          longitude: response.longitude,
                           summary: {
                             whatHappened: response.keyDetails,
                             whereItHappened: response.keyDetails.split(',').pop()?.trim() || 'Unknown Location',
@@ -121,7 +123,7 @@ export default function ReportClient() {
                         };
 
                         const storedIncidents = localStorage.getItem(INCIDENTS_STORAGE_KEY);
-                        const incidents = storedIncidents ? JSON.parse(storedIncidents) as Incident[] : mockIncidents;
+                        const incidents = storedIncidents ? JSON.parse(storedIncidents) as Incident[] : [];
                         incidents.push(newIncident);
                         localStorage.setItem(INCIDENTS_STORAGE_KEY, JSON.stringify(incidents));
                     }

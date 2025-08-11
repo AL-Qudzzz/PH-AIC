@@ -32,6 +32,8 @@ const CallTriageOutputSchema = z.object({
   keyDetails: z
     .string()
     .describe('Key details extracted from the call, such as location and nature of the emergency.'),
+  latitude: z.number().describe('The estimated latitude of the incident location.'),
+  longitude: z.number().describe('The estimated longitude of the incident location.'),
 });
 export type CallTriageOutput = z.infer<typeof CallTriageOutputSchema>;
 
@@ -43,19 +45,43 @@ const callTriagePrompt = ai.definePrompt({
   name: 'callTriagePrompt',
   input: {schema: CallTriageInputSchema},
   output: {schema: CallTriageOutputSchema},
-  prompt: `You are an AI assistant designed to triage emergency calls in Bahasa Indonesia.
+  prompt: `You are an AI assistant designed to triage emergency calls in Bahasa Indonesia. The location is in Jakarta, Indonesia.
 
   1.  Transcribe the provided audio data.
   2.  Identify the type of emergency being reported (e.g., medical, fire, police).
   3.  Extract key details from the call, including the location and nature of the emergency.
-  4.  Present all information in Bahasa Indonesia.
+  4.  Estimate the geographical coordinates (latitude and longitude) based on the described location.
+  5.  Present all information in Bahasa Indonesia.
+  
+  Example 1:
+  - Input: Audio saying "Tolong, ada kebakaran di gedung tinggi dekat Bundaran HI."
+  - Output: {
+      "transcript": "Tolong, ada kebakaran di gedung tinggi dekat Bundaran HI.",
+      "emergencyType": "Fire",
+      "keyDetails": "Kebakaran di gedung tinggi dekat Bundaran HI.",
+      "latitude": -6.1944,
+      "longitude": 106.8229
+    }
+
+  Example 2:
+  - Input: Audio saying "Saya butuh ambulans, ada kecelakaan motor di depan SCBD."
+  - Output: {
+      "transcript": "Saya butuh ambulans, ada kecelakaan motor di depan SCBD.",
+      "emergencyType": "Medical",
+      "keyDetails": "Kecelakaan motor di depan SCBD.",
+      "latitude": -6.2244,
+      "longitude": 106.8078
+    }
 
   Audio Data: {{media url=audioDataUri}}
 
   Output:
   - Transcript: (The full transcription of the call)
   - Emergency Type: (The identified type of emergency)
-  - Key Details: (Important details such as location, specific problem, etc.)`,
+  - Key Details: (Important details such as location, specific problem, etc.)
+  - Latitude: (Estimated latitude)
+  - Longitude: (Estimated longitude)
+  `,
 });
 
 const callTriageFlow = ai.defineFlow(

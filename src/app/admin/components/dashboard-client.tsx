@@ -79,7 +79,13 @@ export default function DashboardClient() {
     if (isAuthenticated) {
         const loadIncidents = () => {
             const storedIncidents = localStorage.getItem(INCIDENTS_STORAGE_KEY);
-            let allIncidents = storedIncidents ? JSON.parse(storedIncidents) as Incident[] : mockIncidents;
+            let allIncidents = storedIncidents ? JSON.parse(storedIncidents) as Incident[] : [];
+            
+             // If local storage is empty, populate with mock data
+            if (allIncidents.length === 0) {
+                allIncidents = mockIncidents;
+                localStorage.setItem(INCIDENTS_STORAGE_KEY, JSON.stringify(allIncidents));
+            }
             
             // Ensure all incidents have a speech property
             allIncidents = allIncidents.map(inc => ({

@@ -5,6 +5,8 @@ export type Incident = {
   id: string;
   type: EmergencyType;
   location: string;
+  latitude: number;
+  longitude: number;
   timestamp: string;
   transcript: string;
   speech?: string; // Add this to match the mock data

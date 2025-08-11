@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
 import { formatDistanceToNow } from 'date-fns';
 
 type IncidentDetailsProps = {
@@ -14,6 +13,8 @@ type IncidentDetailsProps = {
 };
 
 export default function IncidentDetails({ incident }: IncidentDetailsProps) {
+  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${incident.longitude - 0.01}%2C${incident.latitude - 0.01}%2C${incident.longitude + 0.01}%2C${incident.latitude + 0.01}&layer=mapnik&marker=${incident.latitude}%2C${incident.longitude}`;
+  
   return (
     <div className="h-full flex flex-col gap-6">
       <Card className="shadow-sm rounded-xl">
@@ -22,14 +23,13 @@ export default function IncidentDetails({ incident }: IncidentDetailsProps) {
         </CardHeader>
         <CardContent>
             <div className="aspect-[16/6] w-full bg-muted rounded-lg overflow-hidden border">
-                <Image
-                    src={`https://placehold.co/1200x400.png`}
-                    alt="Map placeholder"
-                    width={1200}
-                    height={400}
-                    className="w-full h-full object-cover"
-                    data-ai-hint="map"
-                />
+                <iframe
+                  width="100%"
+                  height="100%"
+                  scrolling="no"
+                  src={mapUrl}
+                  className="border-0"
+                  ></iframe>
             </div>
         </CardContent>
       </Card>
