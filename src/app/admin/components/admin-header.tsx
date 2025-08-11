@@ -43,7 +43,7 @@ export default function AdminHeader() {
           {navItems.map((item) => (
              <Link 
                 href={item.href} 
-                key={item.href}
+                key={`${item.href}-${item.label}`}
                 className={cn(
                     "text-gray-600 hover:text-gray-900", 
                     pathname === item.href && "text-primary font-semibold"
