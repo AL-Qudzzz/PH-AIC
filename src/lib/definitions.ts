@@ -9,7 +9,6 @@ export type Incident = {
   longitude: number;
   timestamp: string;
   transcript: string;
-  speech?: string; // Add this to match the mock data
   summary: {
     whatHappened: string;
     whereItHappened: string;

@@ -8,7 +8,7 @@ import { callTriage, CallTriageOutput } from "@/ai/flows/call-triage";
 import { useToast } from "@/hooks/use-toast";
 import type { Incident, EmergencyType } from "@/lib/definitions";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc } from "firebase/firestore";
 
 // Helper function to map string to EmergencyType
 const toEmergencyType = (type: string): EmergencyType => {
@@ -17,6 +17,9 @@ const toEmergencyType = (type: string): EmergencyType => {
   if (lowerType.includes('fire') || lowerType.includes('kebakaran')) return 'Fire';
   if (lowerType.includes('police') || lowerType.includes('polisi')) return 'Police';
   if (lowerType.includes('traffic') || lowerType.includes('lalu lintas')) return 'Traffic';
+  if (lowerType.includes('accident')) return 'Accident';
+  if (lowerType.includes('robbery')) return 'Robbery';
+  if (lowerType.includes('gas leak')) return 'Gas Leak';
   return 'Unknown';
 };
 
@@ -105,13 +108,12 @@ export default function ReportClient() {
                           timestamp: new Date().toISOString(),
                           transcript: response.transcript,
                           type: toEmergencyType(response.emergencyType),
-                          location: response.keyDetails.split(',').pop()?.trim() || 'Unknown Location',
+                          location: response.keyDetails,
                           latitude: response.latitude,
                           longitude: response.longitude,
-                          speech: response.transcript.substring(0, 20) + '...',
                           summary: {
                             whatHappened: response.keyDetails,
-                            whereItHappened: response.keyDetails.split(',').pop()?.trim() || 'Unknown Location',
+                            whereItHappened: response.keyDetails,
                           },
                           classification: {
                             emergencyType: response.emergencyType,
@@ -129,6 +131,7 @@ export default function ReportClient() {
                 } catch (e) {
                      const errorMessage = e instanceof Error ? e.message : "Terjadi kesalahan yang tidak diketahui.";
                     setError(errorMessage);
+                    setResult(null);
                     toast({
                         variant: "destructive",
                         title: "Error",
@@ -205,7 +208,7 @@ export default function ReportClient() {
            <div className="flex flex-col items-center space-y-4">
              <p className="text-lg font-medium text-foreground">Merekam...</p>
              <div className="relative flex items-center justify-center">
-               <div className="absolute h-20 w-20 bg-destructive/50 rounded-full animate-ping"></div>
+               <div className="absolute h-20 w-20 bg-primary/50 rounded-full animate-ping"></div>
              </div>
              <p className="text-sm text-muted-foreground">Jelaskan situasi darurat Anda. Tekan lagi untuk berhenti.</p>
            </div>

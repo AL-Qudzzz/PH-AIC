@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import ClusterAlert from "./cluster-alert";
 
 export default function DashboardClient() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -42,7 +43,8 @@ export default function DashboardClient() {
     }
     try {
       const reports = currentIncidents.map(inc => ({
-        location: inc.location,
+        id: inc.id,
+        location: inc.location.toLowerCase(),
         description: inc.summary.whatHappened,
         timestamp: inc.timestamp,
       }));
@@ -51,13 +53,14 @@ export default function DashboardClient() {
         reports,
         timeframeMinutes: 60,
         minClusterSize: 2,
+        similarityThreshold: 0.7,
       });
 
       if (result.clusters && result.clusters.length > 0) {
         const mappedClusters: Cluster[] = result.clusters.map(c => ({
             ...c,
             reports: c.reports.map(r => 
-                currentIncidents.find(i => i.timestamp === r.timestamp && i.location.toLowerCase() === r.location.toLowerCase())! 
+                currentIncidents.find(i => i.id === r.id)! 
             ).filter(Boolean) as Incident[]
         }));
         setClusters(mappedClusters);
@@ -98,6 +101,7 @@ export default function DashboardClient() {
            handleClusterDetection(fetchedIncidents);
         } else {
             setSelectedIncident(null);
+            setClusters([]);
         }
       }, (error) => {
         console.error("Error fetching incidents: ", error);
@@ -111,9 +115,9 @@ export default function DashboardClient() {
 
       return () => unsubscribe();
     }
-  }, [isAuthenticated, toast, handleClusterDetection]); // Removed selectedIncident
+  }, [isAuthenticated, toast, handleClusterDetection]);
   
-  if (!isAuthenticated || isLoading) {
+  if (isAuthenticated === null || (isAuthenticated && isLoading)) {
     return (
         <div className="h-screen w-full flex flex-col items-center justify-center gap-4 p-4 md:p-8 bg-gray-50/50">
             <AdminHeader />
@@ -130,11 +134,13 @@ export default function DashboardClient() {
     );
   }
 
+
   return (
     <div className="h-screen w-full flex flex-col bg-gray-50/50">
         <AdminHeader />
         <main className="flex-1 grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6 p-4 md:p-6 min-h-0">
-            <div className="md:col-span-1 xl:col-span-1 h-full min-h-0">
+            <div className="md:col-span-1 xl:col-span-1 h-full min-h-0 flex flex-col gap-4">
+                <ClusterAlert clusters={clusters} />
                 <IncidentList
                     incidents={incidents}
                     selectedIncident={selectedIncident}

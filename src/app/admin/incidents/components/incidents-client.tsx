@@ -79,7 +79,7 @@ export default function IncidentsClient() {
     }
   }, [isAuthenticated]);
 
-  if (!isAuthenticated || isLoading) {
+  if (isAuthenticated === null || (isAuthenticated && isLoading)) {
     return (
         <div className="space-y-4">
             <Skeleton className="h-10 w-1/4" />

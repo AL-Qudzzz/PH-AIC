@@ -43,7 +43,7 @@ export default function IncidentList({ incidents, selectedIncident, onSelectInci
                       <div className="text-xs text-gray-600 space-y-0.5">
                          <p><span className="font-medium">Type:</span> {incident.type}</p>
                          <p><span className="font-medium">Location:</span> {incident.location}</p>
-                         <p className="truncate"><span className="font-medium">Speech:</span> "{incident.speech || incident.summary.whatHappened}"</p>
+                         <p className="truncate"><span className="font-medium">Details:</span> "{incident.summary.whatHappened}"</p>
                       </div>
                     </button>
                   )
