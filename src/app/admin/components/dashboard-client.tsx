@@ -10,8 +10,7 @@ import IncidentDetails from "./incident-details";
 import AdminHeader from "./admin-header";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { auth, db } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import ClusterAlert from "./cluster-alert";
 
@@ -19,21 +18,22 @@ export default function DashboardClient() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [clusters, setClusters] = useState<Cluster[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
 
   // Effect for authentication check and redirection
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
+    const checkAdminStatus = () => {
+      const adminStatus = sessionStorage.getItem("userIsAdmin");
+      if (adminStatus !== "true") {
         router.replace('/profile');
       } else {
-        setIsAuthenticated(true);
+        setIsAdmin(true);
       }
-    });
-    return () => unsubscribe();
+    };
+    checkAdminStatus();
   }, [router]);
 
   const handleClusterDetection = useCallback(async (currentIncidents: Incident[]) => {
@@ -43,7 +43,7 @@ export default function DashboardClient() {
     }
     try {
       const reports = currentIncidents.map(inc => ({
-        id: inc.id,
+        // id is not part of the input schema for detectIncidentCluster reports
         location: inc.location.toLowerCase(),
         description: inc.summary.whatHappened,
         timestamp: inc.timestamp,
@@ -57,12 +57,22 @@ export default function DashboardClient() {
       });
 
       if (result.clusters && result.clusters.length > 0) {
-        const mappedClusters: Cluster[] = result.clusters.map(c => ({
-            ...c,
-            reports: c.reports.map(r => 
-                currentIncidents.find(i => i.id === r.id)! 
-            ).filter(Boolean) as Incident[]
-        }));
+        // The AI returns the original report data, so we need to map it back to the full Incident objects
+        const mappedClusters: Cluster[] = result.clusters.map(c => {
+            const clusterReports = c.reports.map(reportFromAI => {
+                // Find the original incident that matches the AI report details
+                return currentIncidents.find(originalIncident => 
+                    originalIncident.timestamp === reportFromAI.timestamp &&
+                    originalIncident.summary.whatHappened === reportFromAI.description
+                );
+            }).filter((r): r is Incident => r !== undefined); // Filter out any undefined results
+
+            return {
+                ...c,
+                reports: clusterReports
+            };
+        });
+
         setClusters(mappedClusters);
       } else {
         setClusters([]);
@@ -79,7 +89,7 @@ export default function DashboardClient() {
 
   // Effect for data loading from Firestore, depends on authentication
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAdmin) {
       const q = query(collection(db, "incidents"), orderBy("timestamp", "desc"));
       
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -115,9 +125,9 @@ export default function DashboardClient() {
 
       return () => unsubscribe();
     }
-  }, [isAuthenticated, toast, handleClusterDetection]);
+  }, [isAdmin, toast, handleClusterDetection, selectedIncident]);
   
-  if (isAuthenticated === null || (isAuthenticated && isLoading)) {
+  if (isAdmin === null || (isAdmin && isLoading)) {
     return (
         <div className="h-screen w-full flex flex-col items-center justify-center gap-4 p-4 md:p-8 bg-gray-50/50">
             <AdminHeader />

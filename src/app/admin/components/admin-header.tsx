@@ -28,6 +28,8 @@ export default function AdminHeader() {
 
   const handleLogout = async () => {
     try {
+        // Clear local admin session and sign out from Firebase
+        sessionStorage.removeItem("userIsAdmin");
         await signOut(auth);
         toast({
             title: "Logout Successful",

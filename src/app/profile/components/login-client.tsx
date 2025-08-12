@@ -20,38 +20,55 @@ export default function LoginClient() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLoginOrSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
+    // Admin login check
+    if (email === "admin@gmail.com" && password === "admin123") {
+      sessionStorage.setItem("userIsAdmin", "true");
       toast({
-        title: "Login Successful",
+        title: "Admin Login Successful",
         description: "Redirecting to admin dashboard...",
       });
       router.push("/admin");
+      setIsLoading(false);
+      return;
+    }
+
+    // Firebase user login/signup
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      sessionStorage.removeItem("userIsAdmin");
+      toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+      });
+      router.push("/user");
     } catch (err: any) {
-        if (err.code === 'auth/user-not-found') {
-            // If user does not exist, try to create a new one (for demo purposes)
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+            // If user does not exist, try to create a new one
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
+                sessionStorage.removeItem("userIsAdmin");
                 toast({
                     title: "Signup Successful",
-                    description: "New account created. Redirecting to admin dashboard...",
+                    description: "Welcome! Your new account has been created.",
                 });
-                router.push("/admin");
+                router.push("/user");
             } catch (signupError: any) {
-                setError(signupError.message);
+                const errorMessage = signupError.message || "Could not create a new account.";
+                setError(errorMessage);
                 toast({
                     variant: "destructive",
                     title: "Signup Failed",
-                    description: "Could not create a new account.",
+                    description: errorMessage,
                 });
             }
         } else {
-             setError("Invalid email or password.");
+             const errorMessage = err.message || "An unknown error occurred.";
+             setError(errorMessage);
              toast({
                 variant: "destructive",
                 title: "Login Failed",
@@ -67,17 +84,20 @@ export default function LoginClient() {
     <div className="w-full h-full flex flex-col justify-center items-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Admin Login</CardTitle>
-          <CardDescription>Enter credentials to access the dashboard. <br/> Use <b>admin@example.com</b> / <b>Admin123</b></CardDescription>
+          <CardTitle>Login or Sign Up</CardTitle>
+          <CardDescription>
+            Enter your credentials to continue. <br/>
+            Admin? Use <b>admin@gmail.com</b> / <b>admin123</b>
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLoginOrSignup} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@example.com"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -88,7 +108,7 @@ export default function LoginClient() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Admin123"
+                placeholder="Your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -101,7 +121,7 @@ export default function LoginClient() {
               </div>
             )}
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Logging in...' : 'Login or Sign Up'}
+              {isLoading ? 'Processing...' : 'Continue'}
             </Button>
           </form>
         </CardContent>

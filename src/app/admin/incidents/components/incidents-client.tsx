@@ -14,17 +14,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from 'date-fns';
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Flame, Siren, Ambulance, CarCrash } from "lucide-react";
-import { auth, db } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { AlertCircle, Flame, Siren, Ambulance, Car } from "lucide-react";
+import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 
 const ICONS: Record<EmergencyType, React.ElementType> = {
     Medical: Ambulance,
     Fire: Flame,
     Police: Siren,
-    Traffic: CarCrash,
-    Accident: CarCrash,
+    Traffic: Car,
+    Accident: Car,
     Robbery: Siren,
     'Gas Leak': Flame,
     Unknown: AlertCircle,
@@ -37,23 +36,24 @@ const getEmergencyTypeIcon = (type: EmergencyType) => {
 
 export default function IncidentsClient() {
   const [groupedIncidents, setGroupedIncidents] = useState<Record<string, Incident[]>>({});
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
+    const checkAdminStatus = () => {
+      const adminStatus = sessionStorage.getItem("userIsAdmin");
+      if (adminStatus !== "true") {
         router.replace('/profile');
       } else {
-        setIsAuthenticated(true);
+        setIsAdmin(true);
       }
-    });
-    return () => unsubscribe();
+    };
+    checkAdminStatus();
   }, [router]);
   
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAdmin) {
         const q = query(collection(db, "incidents"), orderBy("timestamp", "desc"));
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -77,9 +77,9 @@ export default function IncidentsClient() {
 
         return () => unsubscribe();
     }
-  }, [isAuthenticated]);
+  }, [isAdmin]);
 
-  if (isAuthenticated === null || (isAuthenticated && isLoading)) {
+  if (isAdmin === null || (isAdmin && isLoading)) {
     return (
         <div className="space-y-4">
             <Skeleton className="h-10 w-1/4" />
