@@ -45,7 +45,7 @@ const callTriagePrompt = ai.definePrompt({
   name: 'callTriagePrompt',
   input: {schema: CallTriageInputSchema},
   output: {schema: CallTriageOutputSchema},
-  prompt: `You are an AI assistant designed to triage emergency calls in Bahasa Indonesia. The location is in Jakarta, Indonesia.
+  prompt: `You are an AI assistant designed to triage emergency calls in Bahasa Indonesia. The location is in Jakarta or Tangerang Selatan, Indonesia.
 
   1.  Transcribe the provided audio data.
   2.  Identify the type of emergency being reported (e.g., medical, fire, police).
