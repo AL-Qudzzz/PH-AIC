@@ -86,8 +86,7 @@ export default function LoginClient() {
         <CardHeader>
           <CardTitle>Login or Sign Up</CardTitle>
           <CardDescription>
-            Enter your credentials to continue. <br/>
-            Admin? Use <b>admin@gmail.com</b> / <b>admin123</b>
+            Enter your credentials to continue.
           </CardDescription>
         </CardHeader>
         <CardContent>
