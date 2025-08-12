@@ -68,7 +68,7 @@ export default function LoginClient() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Admin Login</CardTitle>
-          <CardDescription>Enter credentials to access the dashboard. <br/> Use <b>admin@example.com</b> / <b>password123</b></CardDescription>
+          <CardDescription>Enter credentials to access the dashboard. <br/> Use <b>admin@example.com</b> / <b>Admin123</b></CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -88,7 +88,7 @@ export default function LoginClient() {
               <Input
                 id="password"
                 type="password"
-                placeholder="password123"
+                placeholder="Admin123"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
