@@ -45,12 +45,12 @@ const callTriagePrompt = ai.definePrompt({
   name: 'callTriagePrompt',
   input: {schema: CallTriageInputSchema},
   output: {schema: CallTriageOutputSchema},
-  prompt: `You are an AI assistant designed to triage emergency calls in Bahasa Indonesia. The location is in Jakarta or Tangerang Selatan, Indonesia.
+  prompt: `You are an AI assistant designed to triage emergency calls in Bahasa Indonesia. The location is strictly within Jakarta or Tangerang Selatan, Indonesia. Your primary goal is to provide highly accurate geographical coordinates.
 
   1.  Transcribe the provided audio data.
   2.  Identify the type of emergency being reported (e.g., medical, fire, police).
-  3.  Extract key details from the call, including the location and nature of the emergency.
-  4.  Estimate the geographical coordinates (latitude and longitude) based on the described location.
+  3.  Extract key details from the call, focusing on the precise location.
+  4.  Estimate the geographical coordinates (latitude and longitude) with the highest possible accuracy (99% target). Treat this as a critical step for dispatching emergency services.
   5.  Present all information in Bahasa Indonesia.
   
   Example 1:
@@ -72,6 +72,17 @@ const callTriagePrompt = ai.definePrompt({
       "latitude": -6.2244,
       "longitude": 106.8078
     }
+  
+  Example 3 (High Precision):
+  - Input: Audio saying "Ada perampokan di Jalan Cisadane nomor 15, Cikokol, Tangerang."
+  - Output: {
+      "transcript": "Ada perampokan di Jalan Cisadane nomor 15, Cikokol, Tangerang.",
+      "emergencyType": "Police",
+      "keyDetails": "Perampokan di Jalan Cisadane nomor 15, Cikokol, Tangerang.",
+      "latitude": -6.2163,
+      "longitude": 106.6267
+  }
+
 
   Audio Data: {{media url=audioDataUri}}
 
@@ -79,8 +90,8 @@ const callTriagePrompt = ai.definePrompt({
   - Transcript: (The full transcription of the call)
   - Emergency Type: (The identified type of emergency)
   - Key Details: (Important details such as location, specific problem, etc.)
-  - Latitude: (Estimated latitude)
-  - Longitude: (Estimated longitude)
+  - Latitude: (Highly accurate estimated latitude)
+  - Longitude: (Highly accurate estimated longitude)
   `,
 });
 
