@@ -2,7 +2,7 @@
 
 ## 🌟 Overview
 
-PH-AIC is an innovative AI-powered emergency response and public health management system designed to revolutionize how cities handle medical emergencies and public health incidents. Our solution combines cutting-edge AI technologies with real-time data analysis to create smarter, safer, and more resilient urban healthcare systems in the city.
+PH-AIC is an innovative AI-powered emergency response and public health management system designed to revolutionize how cities handle medical emergencies and public health incidents. Our solution combines cutting-edge AI technologies with real-time data analysis to create smarter, safer, and more resilient urban healthcare systems.
 
 ## 🎯 Innovation & Creativity
 
@@ -148,21 +148,10 @@ The system processes various types of emergency data (`src/lib/mock-data.ts`):
 
 ## 👥 Team
 
-- Project Lead: [Name]
-- AI Development: [Name]
-- Frontend Development: [Name]
-- Backend Development: [Name]
-- Public Health Expert: [Name]
-
-## 📞 Contact
-
-Email: [email@domain.com]
-Website: [website-url]
-GitHub: [github-url]
-
-## 📄 License
-
-[Specify License]
+- Project Lead: Muhammad Zaky Ramadhan
+- AI Development: Muhammad Zaky Ramadhan
+- Fullstack Development: Muhammad Faiqul Umam Dz.
+- UI/UX Design: Muhammad Aulia Addinul Haq
 
 ---
 
