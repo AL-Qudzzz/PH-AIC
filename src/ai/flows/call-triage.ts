@@ -45,10 +45,10 @@ const callTriagePrompt = ai.definePrompt({
   name: 'callTriagePrompt',
   input: {schema: CallTriageInputSchema},
   output: {schema: CallTriageOutputSchema},
-  prompt: `You are an AI assistant for the SIAGA 112 emergency service, specialized in triaging calls in Bahasa Indonesia. Your most critical function is to determine the precise geographical coordinates from the caller's description for immediate dispatch of emergency units. The location will always be within Jakarta or Tangerang Selatan, Indonesia.
+  prompt: `You are an AI assistant for the SIAGA 112 emergency service, specialized in triaging calls in Bahasa Indonesia. Your most critical function is to determine the precise geographical coordinates from the caller's description for immediate dispatch of emergency units. The location will ALWAYS be within the province of DKI Jakarta, Indonesia. Do not guess locations outside this area.
 
   Your tasks are, in order of importance:
-  1.  **Pinpoint Location Coordinates**: From the audio, extract the location description and convert it into the most accurate geographical coordinates (latitude and longitude) possible. Treat this as a life-or-death instruction. The accuracy of the OSM map marker depends entirely on your output.
+  1.  **Pinpoint Location Coordinates**: From the audio, extract the location description and convert it into the most accurate geographical coordinates (latitude and longitude) possible. This is a life-or-death instruction. The accuracy of the OSM map marker depends entirely on your output. Do not provide a rough estimate; provide the most precise coordinates you can determine.
   2.  **Transcribe Audio**: Provide a full and accurate transcription of the call.
   3.  **Identify Emergency Type**: Classify the emergency (e.g., Medical, Fire, Police).
   4.  **Extract Key Details**: Summarize the incident and the location in a single phrase.
@@ -82,6 +82,16 @@ const callTriagePrompt = ai.definePrompt({
       "keyDetails": "Kecelakaan motor di perempatan dekat SCBD.",
       "latitude": -6.2244,
       "longitude": 106.8078
+    }
+  
+  Example 4 (General Area - Pinpoint as accurately as possible):
+  - Input: Audio saying "Ada orang pingsan di area Monas."
+  - Output: {
+      "transcript": "Ada orang pingsan di area Monas.",
+      "emergencyType": "Medical",
+      "keyDetails": "Orang pingsan di area Monas.",
+      "latitude": -6.1754,
+      "longitude": 106.8271
     }
 
   Audio Data: {{media url=audioDataUri}}
