@@ -13,7 +13,7 @@ type IncidentDetailsProps = {
 };
 
 export default function IncidentDetails({ incident }: IncidentDetailsProps) {
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${incident.longitude - 0.01}%2C${incident.latitude - 0.01}%2C${incident.longitude + 0.01}%2C${incident.latitude + 0.01}&layer=mapnik&marker=${incident.latitude}%2C${incident.longitude}`;
+  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${incident.longitude - 0.01},${incident.latitude - 0.01},${incident.longitude + 0.01},${incident.latitude + 0.01}&layer=mapnik&marker=${incident.latitude},${incident.longitude}`;
   
   return (
     <div className="h-full flex flex-col gap-6">
