@@ -23,6 +23,21 @@ const toEmergencyType = (type: string): EmergencyType => {
   return 'Unknown';
 };
 
+// Helper to save report to local storage
+const saveReportLocally = (report: Omit<Incident, 'id'>) => {
+    try {
+        const localReportsRaw = localStorage.getItem('userReports');
+        const localReports = localReportsRaw ? JSON.parse(localReportsRaw) : [];
+        // Add a temporary local ID for key purposes
+        const reportWithId = { ...report, id: `local-${Date.now()}` };
+        localReports.unshift(reportWithId); // Add to the beginning
+        localStorage.setItem('userReports', JSON.stringify(localReports.slice(0, 50))); // Limit to 50 reports
+    } catch (error) {
+        console.error("Failed to save report to local storage:", error);
+    }
+};
+
+
 export default function ReportClient() {
   const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -103,7 +118,6 @@ export default function ReportClient() {
                     } else {
                         setResult(response);
                         
-                        // Omit 'id' because Firestore generates it
                         const newIncidentPayload: Omit<Incident, 'id'> = {
                           timestamp: new Date().toISOString(),
                           transcript: response.transcript,
@@ -121,7 +135,12 @@ export default function ReportClient() {
                           },
                         };
 
+                        // Save to Firestore for admin
                         await addDoc(collection(db, "incidents"), newIncidentPayload);
+                        
+                        // Save to local storage for user history
+                        saveReportLocally(newIncidentPayload);
+
                          toast({
                             title: "Laporan Terkirim",
                             description: "Laporan darurat Anda telah berhasil dikirim ke pusat kendali.",

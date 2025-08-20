@@ -11,7 +11,7 @@ import React, { useState, useEffect } from 'react';
 
 const navItems = [
   { href: '/user', icon: Home, label: 'Home' },
-  { href: '#', icon: History, label: 'History' },
+  { href: '/user/history', icon: History, label: 'History' },
   { href: 'spacer', icon: Mic, label: 'Spacer' }, 
   { href: '#', icon: MessageSquare, label: 'Message' },
   { href: '/profile', icon: User, label: 'Profile' },
